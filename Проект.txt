@@ -1,0 +1,43 @@
+Проект 2.0 
+
+
+
+Создание рабочего проекта  
+веб проект с развертыванием нескольких виртуальных машин должен отвечать следующим требованиям:
+- включен https;
+- основная инфраструктура в DMZ зоне;
+- файрвалл на входе;
+- каталог сайта бекэнда общий, кластерный;
+- сбор метрик и настроенный алертинг;
+- организован централизованный сбор логов (по желанию);
+- организован backup.
+
+Руководитель проекта
+Andrey Buranov
+https://t.me/a_buranov  
+
+
+Автоматическое развертывание инфраструктуры с использованием Vagrant + Ansible. 
+Публикация web приложения Wordpress через Https c Бэкэндом Mysql в конфигурации Master-Slave.
+Мониторингом Zabbix+Grafana, сбором логов Rsyslog и бэкапом Borg.
+
+Wordpress	https://192.168.88.20/wp-admin/post.php?post=5&action=edit
+username bosikovav  Pass  1q!Q2w@W3e#E
+
+Grafana		http://192.168.88.20:3000/
+
+Zabbix		http://192.168.88.20:8080/zabbix.php?action=dashboard.view&new=1
+
+Wordpress смена бд  /var/www/html/wordpress/wp-config.php
+
+mysqldump -u root -p database > database.sql
+
+zabbix первый вход Admin zabbix
+
+grafana	admin admin 
+
+
+Готовы к сдаче. 
+
+Евгений Разумовский 
+Дурягин Дмитрий 
