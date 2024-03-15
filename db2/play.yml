@@ -1,0 +1,28 @@
+---
+- hosts: db
+  become:
+    true
+#  become_method:
+#    su
+#  become_user:
+#    root
+  vars:   
+    mysql_root_password: 2w@W3e#E
+    mysql_system_password: 2w@W3e#E
+    mysqld:
+      socket: /var/run/mysqld/mysqld.sock 
+
+  remote_user:
+    vagrant
+  roles:
+    - selinux
+    - mysqldb
+    - zabbix-agent
+    - rsyslog
+   #- epel
+   #- watchlog
+   #- httpd
+   
+
+
+  

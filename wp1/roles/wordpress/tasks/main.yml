@@ -1,0 +1,39 @@
+---
+
+
+- name: Create root directory for site wordpress
+  ansible.builtin.file:
+    path: /var/www/html/wordpress
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'
+
+
+#- name: Download wordpress
+#  ansible.builtin.get_url:
+#    url: https://wordpress.org/latest.tar.gz
+#    dest: /usr/src/
+#    #mode: '0440'
+
+
+- name: Extract wordpress-6.4.1.tar.gz  into /var/www/html/wordpress
+  ansible.builtin.unarchive:
+    src: https://wordpress.org/latest.tar.gz
+    dest: /var/www/html/
+    remote_src: true
+    owner: nginx
+    group: nginx
+    mode: '0755'
+
+
+- name: Create template  for wp-config.php
+  template:
+    src: wp-config.php
+    dest: /var/www/html/wordpress/wp-config.php
+    owner: nginx
+    group: nginx
+    mode: '0755'
+
+
+...

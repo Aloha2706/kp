@@ -1,0 +1,81 @@
+---
+- name: Install yum-utils
+  yum:
+    name: 
+      - yum-utils
+
+- name: Install repo for php
+  ansible.builtin.yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+
+- name: Install php from repo specific enabled
+  ansible.builtin.yum:
+    name: 
+      - php 
+      - php-fpm
+      - php-mysql
+    enablerepo: "remi-php83"
+
+#- name: Install php
+#  yum:
+#    name: 
+#      - php
+#      - php-fpm
+#      - php-mysql
+#    state: present
+
+
+- name: start php-fpm
+  service:
+    name: php-fpm
+    state: started
+    enabled: yes
+
+
+- name:  change config  /etc/php-fpm.d/www.conf
+  ansible.builtin.lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^listen = '
+    line: listen = /run/php-fpm/www.sock
+
+- name:  change config  /etc/php-fpm.d/www.conf
+  ansible.builtin.lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^;listen.group = nobody'
+    line: listen.group = nginx
+#  tags:
+#    now
+
+- name: ReStart php-fpm
+  service:
+    name: php-fpm
+    state: restarted
+
+#- name: ReStart nginx
+#  service:
+#    name: nginx
+#    state: restarted
+
+- name: Create index.php  for nginx
+  template:
+    src: index.php
+    dest: /usr/share/nginx/html/index.php
+
+
+#- name: Setup php-fpm
+#  replace: dest=/etc/php/7.0/fpm/php.ini regexp="(;cgi.fix_pathinfo=1)" replace="cgi.fix_pathinfo=0"
+#  notify:
+#    - restart nginx
+
+#- name: Add php settings
+#  template: src=../../nginx/templates/nginx-wp-common.conf dest=/etc/nginx/nginx-wp-common.conf
+#  notify:
+#    - restart nginx
+
+- name: ReStart nginx
+  service:
+    name: nginx
+    state: restarted
+
+...

@@ -1,0 +1,85 @@
+---
+- ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name:  switch on firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name:  remove eth2 from zone public
+  shell: firewall-cmd --permanent --zone=public --remove-interface=eth2
+
+
+- name:  add eth2 to zone internal
+  shell: firewall-cmd --permanent --zone=internal  --add-interface=eth2
+
+- name:  add-service=zabbix-server
+  shell: firewall-cmd --permanent --zone=internal  --add-service=zabbix-server
+
+- name:  add-service=zabbix-agent
+  shell: firewall-cmd --permanent --zone=internal  --add-service=zabbix-agent
+
+- name:  restrart firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+
+
+
+
+
+- name:  set masquerade on
+  ansible.posix.firewalld:
+    masquerade: true
+    state: enabled
+    permanent: true
+    #zone: internal
+
+- name:  port forward to 192.168.50.21:443
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 forward-port port=443 protocol=tcp to-port=443 to-addr=192.168.50.21 
+    zone: public
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name:  port forward to 192.168.50.21:80
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 forward-port port=80 protocol=tcp to-port=80 to-addr=192.168.50.21 
+    zone: public
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name:  port forward to 192.168.50.24:80
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 forward-port port=8080 protocol=tcp to-port=80 to-addr=192.168.50.24 
+    zone: public
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name:  port forward to 192.168.50.24:3000
+  ansible.posix.firewalld:
+    rich_rule: rule family=ipv4 forward-port port=3000 protocol=tcp to-port=3000 to-addr=192.168.50.24 
+    zone: public
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name:  restrart firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+    daemon_reload: true
+    
+
+...
+#- name:  change /etc/sysctl.conf

@@ -1,0 +1,1 @@
+borg create --stats --list borg@192.168.50.24:MyBorgRepo::"MyFirstBackup-{now:%Y-%m-%d_%H:%M:%S}" /home/db_backup/ &>>/var/log/borg_backup

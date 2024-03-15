@@ -1,0 +1,240 @@
+---
+- name: Setup repo for Mysql 8
+  yum:
+    name: http://repo.mysql.com/mysql80-community-release-el7-11.noarch.rpm
+    state: present
+
+- name: import new key for comunity server 
+  shell: rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+  
+
+
+- name: Install mysql-community-server 
+  yum:
+    name: 
+      - mysql-community-server 
+      - MySQL-python
+    state: present
+#  tags: now
+
+
+- name: root | place temporary cnf file
+  template:
+    src: temp.cnf
+    dest: /etc/my.cnf
+    mode: '0644'
+#  tags: now
+
+- name: Start Mysql
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+- name: root | get temp root password
+  shell: >-
+    grep 'temporary password' /var/log/mysqld.log |
+    awk '{print $NF}' | tail -n 1
+  register: temp_root_pw
+  no_log: true
+#  tags: now
+
+
+- name: root | set root password
+  shell: >-
+    mysqladmin -u root
+    --password="{{ temp_root_pw.stdout }}"
+    password "{{ mysql_root_password }}"
+  ignore_errors: True
+  #no_log: true
+#  tags: now
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/mysql/
+    state: directory
+    mode: '0755'
+
+- name: root | copy root.cnf
+  template:
+    src: root.cnf
+    dest: /etc/mysql/root.cnf
+    mode: '0600'
+    owner: root
+    group: root
+
+
+- name: root | make symlink of file for root db access
+  file:
+    state: link
+    src: /etc/mysql/root.cnf
+    path: /root/.my.cnf
+
+  #no_log: true
+
+- name: root | delete anonymous connections
+  mysql_user:
+    name: ""
+    host_all: true
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+#  no_log: true
+
+
+- name: root | ensure test database is removed
+  mysql_db:
+    name: test
+    login_user: root
+    state: absent
+    login_password: "{{ mysql_root_password }}"
+
+- name: root | stop mysql again
+  systemd:
+    name: mysqld
+    state: stopped
+    enabled: true
+
+
+- name: root | remove mysqld log file
+  file:
+    path: /var/log/mysqld.log
+    state: absent
+
+
+- name: root | start mysql again
+  systemd:
+    name: mysqld
+    state: started
+    enabled: true
+
+- name: Create a new database with name 'wp_dbase'
+  community.mysql.mysql_db:
+    name: wp_dbase
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: set wp_user  and password
+  mysql_user:
+    name: wp_user
+    password: "{{ mysql_system_password }}"
+    host: "%"
+    #login_port: 3306
+    priv: '*.*:ALL,GRANT'
+    update_password: always
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: root | stop mysql again
+  systemd:
+    name: mysqld
+    state: stopped
+    enabled: true
+  tags: dump
+
+- name: Dump all databases 
+  community.mysql.mysql_db:
+    state: dump
+    name: wp_dbase
+    target: /tmp/dump.sql
+    login_host: 192.168.50.22
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+  tags: dump
+
+- name: root | start mysql again
+  systemd:
+    name: mysqld
+    state: started
+    enabled: true
+  tags: dump
+
+- name: Restore database
+  community.mysql.mysql_db:
+    name: wp_dbase
+    state: import
+    target: /tmp/dump.sql
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+  tags: dump
+
+#- name: restart mysql 
+#  systemd:
+#    name: mysqld
+#    state: restarted
+
+- name: Get primary binlog file name and binlog position
+  community.mysql.mysql_replication:
+    mode: getprimary
+    login_host: 192.168.50.22
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+  register: master
+
+
+- name: stop MariaDB replica 
+  community.mysql.mysql_replication:
+    mode: stopreplica
+    login_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+
+
+- name: Change primary to primary server
+  community.mysql.mysql_replication:
+    mode: changeprimary
+    primary_host: 192.168.50.22
+    primary_log_file: "{{ master.File }}"
+    primary_log_pos: "{{ master.Position }}"
+    primary_password: "{{ mysql_root_password }}"
+    primary_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+
+
+- name: Start MariaDB replica 
+  community.mysql.mysql_replication:
+    mode: startreplica
+    login_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+
+
+# добавил повторное выполнение добавление установки позиции бинлога. 
+# вот не хочет работать с первого раза. 
+
+- name: Get primary binlog file name and binlog position
+  community.mysql.mysql_replication:
+    mode: getprimary
+    login_host: 192.168.50.22
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+  register: master
+  
+- name: stop MariaDB replica 
+  community.mysql.mysql_replication:
+    mode: stopreplica
+    login_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+  
+
+- name: Change primary to primary server
+  community.mysql.mysql_replication:
+    mode: changeprimary
+    primary_host: 192.168.50.22
+    primary_log_file: "{{ master.File }}"
+    primary_log_pos: "{{ master.Position }}"
+    primary_password: "{{ mysql_root_password }}"
+    primary_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+    login_user: wp_user
+  
+
+- name: Start MariaDB replica 
+  community.mysql.mysql_replication:
+    mode: startreplica
+    login_user: wp_user
+    login_password: "{{ mysql_root_password }}"
+  

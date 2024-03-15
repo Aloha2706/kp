@@ -1,0 +1,24 @@
+---
+# сбор логов с сервера wp осуществляется через настройку файла конфигурации nginx
+- name: Change conf rsyslog.conf 
+  template:
+    src: rsyslog.conf
+    dest: /etc/rsyslog.conf
+#    mode: '0600'
+# tag: now
+
+- name:  restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+
+
+
+
+#- name:  change config  DBPassword  in /etc/zabbix/zabbix_server.conf
+#  ansible.builtin.lineinfile:
+##    path: /etc/zabbix/zabbix_server.conf
+ #   regexp: '^# DBPassword='
+#    line:  DBPassword={{ mysql_root_password }}
+#  tags: now
+

@@ -1,0 +1,48 @@
+---
+
+# здесь надо включить VPN потому что...
+- name: import new key for grafana
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpm.grafana.com/gpg.key
+    validate_certs: no
+  ignore_errors: True
+
+- name: installing grafana repository
+  yum:
+    name: https://dl.grafana.com/oss/release/grafana-10.2.3-1.x86_64.rpm
+    state: present
+    validate_certs: no
+
+- name: Install grafana
+  yum:
+    name=grafana
+    state=present
+
+- name: Start grafana-server 
+  service:
+    name: grafana-server 
+    state: started
+    enabled: yes
+
+- name: installing Zabbix plugin 
+  shell: grafana-cli plugins install alexanderzobnin-zabbix-app
+
+
+- name: make template /etc/grafana/grafana.ini
+  template:
+    src: grafana.ini
+    dest: /etc/grafana/grafana.ini
+    mode: '0640'
+    owner: root
+    group: grafana
+
+
+- name: Restart grafana-server 
+  service:
+    name: grafana-server 
+    state: started
+    enabled: yes
+
+...
+

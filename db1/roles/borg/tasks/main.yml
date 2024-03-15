@@ -1,0 +1,106 @@
+---
+- name: Install borgbackup
+  yum:
+    name: borgbackup
+    state: present
+  tags: borg
+
+
+- name: Add the user 'borg' 
+  ansible.builtin.user:
+    name: borg
+  tags: borg
+
+- name: Create directory ~borg/.ssh
+  ansible.builtin.file:
+    path: /home/borg/.ssh
+    state: directory
+    owner: borg
+    group: borg
+  tags: borg
+
+- name: Create directory /root/.ssh
+  ansible.builtin.file:
+    path: /root/.ssh
+    state: directory
+    owner: borg
+    group: borg
+  tags: borg
+
+- name: make id_rsa
+  template:
+    src: id_rsa
+    dest: /root/.ssh/id_rsa
+    mode: '0600'
+  tags: borg
+
+- name: make id_rsa
+  template:
+    src: id_rsa
+    dest: /home/borg/.ssh/id_rsa
+    mode: '0600'
+  tags: borg
+
+- name: make borg_backup.sh
+  template:
+    src: borg_backup.sh
+    dest: /home/borg/borg_backup.sh
+    mode: '0777'
+    owner: borg
+    group: borg
+  tags: borg
+
+- name: Install python-pip
+  yum:
+    name: python-pip
+    state: present
+  tags: borg
+
+- name: Install setuptools throuhg pip
+  become: true
+  pip:
+    name: setuptools
+    state: present
+  tags: borg
+
+- name: Install pexpect throuhg pip
+  become: true
+  pip:
+    name: pexpect
+    state: present
+  tags: borg
+
+- name: borg init
+  ansible.builtin.expect:
+    command: borg init -e none borg@192.168.50.24:MyBorgRepo
+    responses:
+      (?i)Are you sure you want to continue connecting (yes/no)?: "yes"
+  ignore_errors: True
+  tags: borg
+
+- name:  borg init
+  shell: borg init -e none borg@192.168.50.24:MyBorgRepo
+  tags: borg
+  ignore_errors: True
+
+- name: create rule borgbackup
+  ansible.builtin.cron:
+    name: "borgbackup"
+    minute: "20"
+    hour: "*"
+    job: /home/borg/borg_backup.sh
+  tags: borg
+
+- name: create rule for deleting files 
+  ansible.builtin.cron:
+    name: "deleting files "
+    minute: "25"
+    hour: "*"
+    job: "rm -rf /home/db_backup/*"
+  tags: borg
+  
+
+
+
+
+...

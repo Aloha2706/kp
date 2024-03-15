@@ -1,0 +1,99 @@
+---
+- name: Install nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: Start nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Create directory /etc/nginx/conf.d
+  ansible.builtin.file:
+    path: /etc/nginx/conf.d
+    state: directory
+
+
+- name: Create template  for wordpress.conf
+  template:
+    src: templates/nginx-wp-common.conf
+    dest: /etc/nginx/conf.d/wordpress.conf
+
+
+- name: Create template  for nginx.conf
+  template:
+    src: templates/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  tags: now
+
+- name: Create directory /etc/nginx/default.d
+  ansible.builtin.file:
+    path: /etc/nginx/default.d
+    state: directory
+
+- name: Create redirect from port 80 to 443
+  template:
+    src: ssl-redirect.conf
+    dest: /etc/nginx/default.d/ssl-redirect.conf
+
+
+- name: Create nginx-selfsigned.crt
+  template:
+    src: nginx-selfsigned.crt
+    dest: /etc/ssl/certs/nginx-selfsigned.crt
+
+
+
+- name: Create dhparam.pem
+  template:
+    src: dhparam.pem
+    dest: /etc/ssl/certs/dhparam.pem
+
+- name: Create directory /etc/ssl/private
+  ansible.builtin.file:
+    path: /etc/ssl/private
+    state: directory
+    mode: '0700'
+
+- name: Create nginx-selfsigned.key
+  template:
+    src: nginx-selfsigned.key
+    dest: /etc/ssl/private/nginx-selfsigned.key
+
+
+#- name: Create directory /etc/nginx/sites-available
+#  ansible.builtin.file:
+#    path: /etc/nginx/sites-available
+#    state: directory
+#    mode: '0755'
+
+#- name: Create directory /etc/nginx/sites-enabled
+#  ansible.builtin.file:
+#    path: /etc/nginx/sites-enabled
+#    state: directory
+#    mode: '0755'
+
+
+
+#- name: Create a symbolic link for nginx.conf
+#  ansible.builtin.shell: ln -s /etc/nginx/sites-available/example.com.conf /etc/nginx/sites-enabled/
+
+#- name: Create a symbolic link for nginx.conf
+#  ansible.builtin.file:
+#    src: /etc/nginx/sites-available/example.com.conf
+#    dest: /etc/nginx/sites-enabled/example.com.conf
+#    owner: root
+#    group: root
+#    state: link
+
+
+- name: ReStart nginx
+  service:
+    name: nginx
+    state: restarted
+
+
+
+...

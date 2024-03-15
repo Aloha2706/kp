@@ -1,0 +1,35 @@
+---
+- hosts: zb
+  become:
+    true
+#  become_method:
+#    su
+#  become_user:
+#    root
+  vars:   
+    mysql_temp_password: 2w@W3e#E
+    mysql_root_password: 12345678
+    mysql_system_password: 12345678
+    #mysqld:
+      #socket: /var/run/mysqld/mysqld.sock 
+
+  remote_user:
+    vagrant
+  roles:
+  - epel
+  - selinux
+  - mysqldb
+  - zabbix
+  - grafana
+  - rsyslog
+  - borg
+  
+  
+  #- nginx
+  #- php
+  #- wordpress
+...
+   
+
+
+  

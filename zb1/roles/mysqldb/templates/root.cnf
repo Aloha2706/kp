@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+
+# This file is symlinked to /root/.my.cnf to use passwordless login for the root user
+
+[client]
+user     = root
+password = {{ mysql_system_password }}
+

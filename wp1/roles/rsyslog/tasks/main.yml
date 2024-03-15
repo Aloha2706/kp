@@ -1,0 +1,15 @@
+---
+
+
+- name: Create conf  for rsyslog
+  template:
+    src: all.conf
+    dest: /etc/rsyslog.d/all.conf
+  tags: rsys
+
+- name: restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+  tags: rsys
+...

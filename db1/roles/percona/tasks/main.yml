@@ -1,0 +1,47 @@
+---
+- name: Install zstd compressor 
+  yum:
+    name: zstd
+    state: present
+
+
+- name: Install percona Repo
+  yum:
+    name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    state: present
+    validate_certs: no 
+
+- name:  percona-release enable-only tools
+  shell: percona-release enable-only tools
+
+- name: Install  percona-xtrabackup-80
+  yum:
+    name:  percona-xtrabackup-80
+    state: present
+
+- name: Create directory /home/db_backup/
+  ansible.builtin.file:
+    path: /home/db_backup/
+    state: directory
+    mode: '0777'
+  tags: percona
+
+
+- name: create rule for percona xtrabackup
+  ansible.builtin.cron:
+    name: "percona xtrabackup"
+    minute: "10"
+    hour: "*"
+    job: "xtrabackup --user=root --password=2w@W3e#E --backup --target-dir=/home/db_backup/ &>>/var/log/percona_backup"
+  tags: percona
+
+- name: make consistent state 
+  ansible.builtin.cron:
+    name: "consistent xtrabackup"
+    minute: "15"
+    hour: "*"
+    job: "xtrabackup --prepare --target-dir=/home/db_backup/ &>>/var/log/percona_prepare"
+  tags: percona
+
+
+...

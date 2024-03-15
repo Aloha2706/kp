@@ -1,0 +1,29 @@
+---
+- name: installing zabbix repository.
+  yum:
+    name: https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+    state: present
+    validate_certs: no
+  tags: now
+
+- name: Install Zabbix  agent
+  yum:
+    name: 
+      - zabbix-agent
+    state: present
+  tags: now
+
+- name:  change config  DBPassword  in //etc/zabbix/zabbix_agentd.conf
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: '^Server=127.0.0.1'
+    line:  Server=192.168.50.24
+  tags: now
+
+- name: Restart Services
+  service:
+    name: zabbix-agent
+    state: restarted
+    enabled: yes
+  tags: now
+...

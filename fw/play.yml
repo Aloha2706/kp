@@ -1,0 +1,21 @@
+---
+- hosts: fw
+  become:
+    true
+#  become_method:
+#    su
+#  become_user:
+#    root
+  remote_user:
+    vagrant
+  roles:
+   - forwarding
+   - zabbix-agent
+   - rsyslog
+   #- epel
+   #- watchlog
+   #- httpd
+   
+
+
+  
