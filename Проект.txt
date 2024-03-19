@@ -35,9 +35,5 @@ mysqldump -u root -p database > database.sql
 zabbix первый вход Admin zabbix
 
 grafana	admin admin 
-
-
-Готовы к сдаче. 
-
-Евгений Разумовский 
-Дурягин Дмитрий 
+Видео защиты 
+https://1drv.ms/v/s!AvAbd109-harsE7vbIYqnDRYeF-c?e=grSeYI
